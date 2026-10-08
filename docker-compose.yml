@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nabee
+      POSTGRES_PASSWORD: nabee
+      POSTGRES_DB: nabee
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nabee"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+      BASE_URL: ${BASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITHUB_OWNER_ID: ${GITHUB_OWNER_ID}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DATABASE_URL: postgres://nabee:nabee@postgres:5432/nabee
+    ports:
+      - "8787:8787"
+    volumes:
+      - appdata:/app/.data
+
+volumes:
+  pgdata:
+  appdata:

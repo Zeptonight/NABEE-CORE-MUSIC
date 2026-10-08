@@ -1,0 +1,46 @@
+{
+  "name": "nabee-core-music",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NABEE CORE — Production-Grade Discord Music Bot + Web Control Platform",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev:server": "tsx watch server/src/index.ts",
+    "dev:web": "vite --config web/vite.config.ts",
+    "build": "npm run build:web && npm run build:server",
+    "build:web": "vite build --config web/vite.config.ts",
+    "build:server": "tsc -p server/tsconfig.json",
+    "start": "node server/dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p server/tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@discordjs/voice": "0.19.2",
+    "@fastify/cookie": "11.1.2",
+    "@fastify/rate-limit": "11.2.0",
+    "@fastify/static": "10.1.5",
+    "discord.js": "14.27.0",
+    "fastify": "5.12.5",
+    "libsodium-wrappers": "0.8.4",
+    "pg": "8.16.3",
+    "play-dl": "1.9.7",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4"
+  },
+  "devDependencies": {
+    "@types/libsodium-wrappers": "0.7.14",
+    "@types/node": "22.18.13",
+    "@types/pg": "8.15.6",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.4",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "7.3.1",
+    "vitest": "5.0.3"
+  }
+}
