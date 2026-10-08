@@ -3,7 +3,7 @@ import { log } from './logger.js';
 import { getDb, closeDb, measureDbLatency } from './db/index.js';
 import { ensureStatsColumns } from './db/stats.js';
 import { startMetrics, stopMetrics } from './metrics.js';
-import { pruneExpiredSessions } from './db/repo.js';
+import { pruneExpiredSessions, getSetting, setSetting } from './db/repo.js';
 import { startBot, stopBot } from './bot/client.js';
 import { resolveFfmpeg } from './bot/ffmpeg.js';
 import { buildApp } from './app.js';
@@ -14,6 +14,9 @@ async function main(): Promise<void> {
   // ---- init subsystems (real; skipped when unconfigured with honest UI states) ----
   const db = await getDb();
   await ensureStatsColumns().catch(() => undefined);
+  // real first-boot timestamp (powers the announcement card — no fake dates)
+  const firstBoot = await getSetting<number | null>('first_boot_at', null);
+  if (!firstBoot) await setSetting('first_boot_at', Date.now());
   startMetrics(() => measureDbLatency(db).catch(() => null));
   setInterval(() => void pruneExpiredSessions().catch(() => undefined), 3600_000).unref();
   void resolveFfmpeg();

@@ -7,7 +7,8 @@ export type IconName =
   | 'skip-back' | 'skip-fwd' | 'pause' | 'play' | 'volume' | 'sliders' | 'wave' | 'speaker'
   | 'plus' | 'trash' | 'crown' | 'cpu' | 'ram' | 'disk' | 'network' | 'clock' | 'headset'
   | 'refresh' | 'x' | 'check' | 'alert' | 'logout' | 'download' | 'upload' | 'external' | 'edit'
-  | 'server' | 'send' | 'zap' | 'eye' | 'activity' | 'list' | 'globe' | 'lock' | 'more';
+  | 'server' | 'send' | 'zap' | 'eye' | 'activity' | 'list' | 'globe' | 'lock' | 'more'
+  | 'shuffle' | 'help' | 'book' | 'doc' | 'discord' | 'megaphone' | 'disc';
 
 const P = (d: string, key?: number) => <path key={key} d={d} />;
 
@@ -432,6 +433,61 @@ const icons: Record<IconName, JSX.Element> = {
       <circle cx="12" cy="5" r="1.3" fill="currentColor" stroke="none" />
       <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
       <circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none" />
+    </>
+  ),
+  shuffle: (
+    <>
+      {P('M3 6h3.5c1.4 0 2.6.7 3.4 1.8l4.2 6.4c.8 1.1 2 1.8 3.4 1.8H21')}
+      {P('M3 16h3.5c1.4 0 2.6-.7 3.4-1.8l.9-1.4')}
+      {P('M13.9 9.2l.6-.9c.8-1.1 2-1.8 3.4-1.8H21')}
+      {P('M18.5 4l2.5 2.5L18.5 9')}
+      {P('M18.5 13l2.5 2.5L18.5 18')}
+    </>
+  ),
+  help: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      {P('M9.6 9.2a2.5 2.5 0 0 1 4.9.7c0 1.6-2.4 2-2.4 3.4')}
+      {P('M12 16.6h.01')}
+    </>
+  ),
+  book: (
+    <>
+      {P('M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z')}
+      {P('M4 20.5V5.5')}
+      {P('M8 7h8')}
+      {P('M8 10.5h6')}
+    </>
+  ),
+  doc: (
+    <>
+      {P('M6 2h9l4 4v16H6z')}
+      {P('M15 2v4h4')}
+      {P('M9 11h7')}
+      {P('M9 15h7')}
+      {P('M9 7h2')}
+    </>
+  ),
+  discord: (
+    <path
+      fill="currentColor"
+      stroke="none"
+      d="M18.9 6.3a15.4 15.4 0 0 0-3.8-1.2l-.5.9a13.6 13.6 0 0 0-5.2 0l-.5-.9c-1.3.2-2.6.6-3.8 1.2A15.9 15.9 0 0 0 2.4 17a15.6 15.6 0 0 0 4.7 2.4l1-1.6c-.7-.3-1.4-.6-2-1l.5-.4a11.2 11.2 0 0 0 9.6 0l.5.4c-.6.4-1.3.7-2 1l1 1.6a15.5 15.5 0 0 0 4.7-2.4 15.8 15.8 0 0 0-1.5-10.7ZM9.3 14.6c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9Zm5.4 0c-.9 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9Z"
+    />
+  ),
+  megaphone: (
+    <>
+      {P('M3 10v4l4 .8L18 19V5L7 9.2z')}
+      {P('M7 14.8V19')}
+      {P('M18 9a3.5 3.5 0 0 1 0 6')}
+    </>
+  ),
+  disc: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="2.6" />
+      {P('M12 3v3.4')}
+      {P('M12 17.6V21')}
     </>
   ),
 };

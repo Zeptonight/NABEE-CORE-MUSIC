@@ -260,3 +260,68 @@ export function MascotInner({ uid }: { uid: string }) {
     </g>
   );
 }
+
+/** Compact horizontal logo lockup (sidebar header — updated reference). */
+export function HorizontalLogo() {
+  return (
+    <div className="hlogo">
+      <Mascot size={34} className="hlogo-mascot" />
+      <div className="hlogo-text">
+        <span>
+          NABEE <em>HEX</em>
+        </span>
+        <span className="hlogo-line2">
+          TEAM <CrownIcon size={11} className="hlogo-crown" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Hero artwork: mascot over chains + crystal shards (updated reference hero). */
+export function HeroArt() {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const chain = (x: number, y: number, n: number, rot: number, key: string) => (
+    <g key={key} transform={`translate(${x} ${y}) rotate(${rot})`} stroke="#4c8dff" strokeWidth="2.4" fill="none" opacity="0.55">
+      {Array.from({ length: n }).map((_, i) => (
+        <g key={i} transform={`translate(0 ${i * 17})`}>
+          <ellipse rx="6.5" ry="10.5" />
+          <ellipse rx="3.6" ry="7" opacity="0.5" />
+        </g>
+      ))}
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 260 230" className="heroart-svg" aria-hidden="true">
+      <defs>
+        <linearGradient id={`ha-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#2f7dff" />
+          <stop offset="1" stopColor="#0a1a44" />
+        </linearGradient>
+        <linearGradient id={`hb-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#4cc9f0" />
+          <stop offset="1" stopColor="#183a80" />
+        </linearGradient>
+        <radialGradient id={`hglow-${uid}`} cx="0.5" cy="0.45" r="0.65">
+          <stop stopColor="#1e4fd6" stopOpacity="0.6" />
+          <stop offset="1" stopColor="#050d26" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="260" height="230" fill={`url(#hglow-${uid})`} />
+      {/* chains */}
+      {chain(38, -6, 15, 14, `c1${uid}`)}
+      {chain(196, -10, 15, -16, `c2${uid}`)}
+      {chain(118, 118, 8, 78, `c3${uid}`)}
+      {/* crystals */}
+      <polygon points="18,150 42,84 66,152" fill={`url(#ha-${uid})`} opacity="0.85" />
+      <polygon points="188,158 214,92 240,160" fill={`url(#hb-${uid})`} opacity="0.75" />
+      <polygon points="96,208 116,164 138,210" fill={`url(#ha-${uid})`} opacity="0.6" />
+      <polygon points="150,40 170,4 190,44" fill={`url(#hb-${uid})`} opacity="0.7" />
+      <polygon points="60,44 76,10 92,48" fill={`url(#ha-${uid})`} opacity="0.5" />
+      {/* mascot */}
+      <g transform="translate(130 118) scale(1.02) translate(-100 -100)">
+        <MascotInner uid={uid + 'h'} />
+      </g>
+    </svg>
+  );
+}

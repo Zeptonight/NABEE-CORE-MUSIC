@@ -2,13 +2,13 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { HashRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { api, type ApiError } from './api';
 import { Icon, type IconName } from './ui/Icon';
-import { CrystalBackdrop, LogoLockup } from './ui/art';
-import type { Bootstrap, Me } from './ui/types';
+import { CrystalBackdrop, HorizontalLogo } from './ui/art';
+import type { Bootstrap, DashboardData, Me } from './ui/types';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { QueuePage, MusicPage } from './pages/MusicPages';
-import { SystemPage, ConnectionsPage, UsageStatsPage, DeveloperPage } from './pages/SystemPages';
-import { EmbedsPage, LinksPage, WebhooksPage } from './pages/IntegrationsPages';
+import { SystemPage, ConnectionsPage, UsageStatsPage, DeveloperPage, DatabasePage, HelpPage, ApiDocsPage } from './pages/SystemPages';
+import { EmbedsPage, LinksPage, WebhooksPage, CommunityPage, ServersPage } from './pages/IntegrationsPages';
 import { UsersPage, CredentialsPage, LogsPage, SecurityPage, BackupPage, SettingsPage, BotSettingsPage, ProfilePage } from './pages/AdminPages';
 
 interface Ctx {
@@ -25,43 +25,43 @@ interface NavDef {
   to: string;
   icon: IconName;
   label: string;
-  chev?: boolean;
 }
 
 const NAV: NavDef[] = [
   { to: '/', icon: 'home', label: 'หน้าแรก' },
-  { to: '/queue', icon: 'queue', label: 'คิวเพลง', chev: true },
-  { to: '/music', icon: 'music', label: 'เพลง' },
-  { to: '/system', icon: 'monitor', label: 'ซิสเทม' },
+  { to: '/community', icon: 'music', label: 'คอมมูนิตี้' },
+  { to: '/music', icon: 'disc', label: 'เพลง' },
+  { to: '/servers', icon: 'server', label: 'เซิร์ฟเวอร์' },
   { to: '/embeds', icon: 'embed', label: 'จัดการ Embed' },
-  { to: '/links', icon: 'link', label: 'ลิงก์ & เชื่อม' },
+  { to: '/links', icon: 'link', label: 'ลิงค์ & เชื่อม' },
   { to: '/users', icon: 'users', label: 'ยูสเซอร์' },
   { to: '/usage', icon: 'chart', label: 'สถิติการใช้งาน' },
-  { to: '/bot-settings', icon: 'bot', label: 'ตั้งค่าบอท' },
+  { to: '/bot-settings', icon: 'gear', label: 'ตั้งค่า Bot' },
   { to: '/credentials', icon: 'key', label: 'API & Credentials' },
   { to: '/connections', icon: 'plug', label: 'การเชื่อมต่อ' },
   { to: '/webhooks', icon: 'webhook', label: 'Webhook' },
-  { to: '/profile', icon: 'idcard', label: 'ข้อมูลผู้ใช้' },
-  { to: '/logs', icon: 'log', label: 'บันทึกการทำงาน' },
+  { to: '/database', icon: 'backup', label: 'ฐานข้อมูล' },
   { to: '/security', icon: 'shield', label: 'ความปลอดภัย' },
-  { to: '/backup', icon: 'backup', label: 'การสำรองข้อมูล' },
-  { to: '/settings', icon: 'gear', label: 'ระบบ' },
-  { to: '/account', icon: 'badge', label: 'บัญชี' },
-  { to: '/developer', icon: 'code', label: 'ผู้พัฒนา' },
+  { to: '/backup', icon: 'download', label: 'สำรองข้อมูล' },
+  { to: '/system', icon: 'monitor', label: 'ระบบ' },
+  { to: '/settings', icon: 'gear', label: 'ตั้งค่า' },
+  { to: '/help', icon: 'help', label: 'ช่วยเหลือ' },
 ];
 
-function Sidebar({ me, open }: { me: Me; open: boolean }) {
+function Sidebar({ me, open, onToggle }: { me: Me; open: boolean; onToggle: () => void }) {
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`} id="sidebar">
-      <div className="logo-area">
-        <LogoLockup />
+      <div className="side-head">
+        <button className="hamburger side-toggle" onClick={onToggle} aria-label="toggle menu">
+          <Icon name="menu" size={16} />
+        </button>
+        <HorizontalLogo />
       </div>
       <nav className="nav">
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
             <Icon name={n.icon} />
             <span>{n.label}</span>
-            {n.chev && <Icon name="chevron-right" size={12} className="chev" />}
           </NavLink>
         ))}
       </nav>
@@ -81,10 +81,10 @@ function Sidebar({ me, open }: { me: Me; open: boolean }) {
         <NavLink to="/" title="หน้าแรก">
           <Icon name="home" size={15} />
         </NavLink>
-        <a href="https://github.com" target="_blank" rel="noreferrer" title="GitHub">
-          <Icon name="github" size={15} />
+        <a href="https://discord.com/developers/docs" target="_blank" rel="noreferrer" title="Discord">
+          <Icon name="discord" size={15} />
         </a>
-        <NavLink to="/backup" title="การสำรองข้อมูล">
+        <NavLink to="/backup" title="สำรองข้อมูล">
           <Icon name="download" size={15} />
         </NavLink>
         <NavLink to="/connections" title="การเชื่อมต่อ">
@@ -97,42 +97,41 @@ function Sidebar({ me, open }: { me: Me; open: boolean }) {
 
 function Header({
   me,
-  onMenu,
+  onToggle,
+  unread,
   search,
   setSearch,
 }: {
   me: Me;
-  onMenu: () => void;
+  onToggle: () => void;
+  unread: number;
   search: string;
   setSearch: (v: string) => void;
 }) {
   const loc = useLocation();
   return (
     <header className="header">
-      <button className="hamburger" onClick={onMenu} aria-label="menu">
+      <button className="hamburger" onClick={onToggle} aria-label="menu">
         <Icon name="menu" size={17} />
       </button>
-      <span className="side-logo">
-        NABEE <span style={{ color: 'var(--cyan-2)' }}>HEX</span> TEAM
-      </span>
       <label className="search">
         <Icon name="search" size={14} />
         <input placeholder="ค้นหาเพลง, เซิร์ฟเวอร์ หรือคำสั่ง..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </label>
       <span className="spacer" />
-      <a className="iconbtn" href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub">
-        <Icon name="github" size={17} />
+      <a className="iconbtn" href="https://discord.com/developers/docs" target="_blank" rel="noreferrer" aria-label="Discord">
+        <Icon name="discord" size={17} />
       </a>
       <button
         className="iconbtn"
         aria-label="notifications"
+        title="กิจกรรมล่าสุด"
         onClick={() => {
-          const p = loc.pathname === '/' ? '/usage' : '/';
-          window.location.hash = `#${p}`;
+          window.location.hash = loc.pathname === '/usage' ? '#/' : '#/usage';
         }}
       >
         <Icon name="bell" size={16} />
-        <i className="ndot" />
+        {unread > 0 && <i className="nbadge">{unread > 9 ? '9+' : unread}</i>}
       </button>
       <NavLink to="/profile" className="userchip" style={{ textDecoration: 'none', color: 'inherit' }}>
         {me.user?.avatarUrl ? (
@@ -160,7 +159,7 @@ function TabBar() {
   return (
     <nav className="tabbar">
       {tabs.map((t) => (
-        <NavLink key={t.to} to={t.to} end={t.to === '/'} className={({ isActive }) => (isActive && t.to !== '/more' ? 'active' : t.to === '/more' ? '' : '')}>
+        <NavLink key={t.to} to={t.to} end={t.to === '/'} className={({ isActive }) => (isActive && t.to !== '/more' ? 'active' : '')}>
           <Icon name={t.icon} size={17} />
           {t.label}
         </NavLink>
@@ -171,21 +170,32 @@ function TabBar() {
 
 function Shell({ me, boot, children }: { me: Me; boot: Bootstrap; children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [search, setSearch] = useState('');
+  const [unread, setUnread] = useState(0);
   const loc = useLocation();
   useEffect(() => setDrawerOpen(false), [loc.pathname]);
+  useEffect(() => {
+    api<Pick<DashboardData, 'unread'>>('/api/dashboard')
+      .then((d) => setUnread(Number(d.unread ?? 0)))
+      .catch(() => undefined);
+  }, [loc.pathname]);
+
+  const toggle = () => {
+    if (window.matchMedia('(max-width: 1150px)').matches) setDrawerOpen(!drawerOpen);
+    else setCollapsed(!collapsed);
+  };
+
   const ctx = useMemo<Ctx>(() => ({ me, boot, refreshMe: () => window.location.reload(), drawerOpen, setDrawerOpen }), [me, boot, drawerOpen]);
   return (
     <AppCtx.Provider value={ctx}>
       <div className="shell">
         <CrystalBackdrop />
-        <div className="frame">
-          <Sidebar me={me} open={drawerOpen} />
-          {drawerOpen && (
-            <div className="drawer-backdrop show" onClick={() => setDrawerOpen(false)} />
-          )}
+        <div className={`frame ${collapsed ? 'collapsed' : ''}`}>
+          <Sidebar me={me} open={drawerOpen} onToggle={toggle} />
+          {drawerOpen && <div className="drawer-backdrop show" onClick={() => setDrawerOpen(false)} />}
           <div className="frame-inner">
-            <Header me={me} onMenu={() => setDrawerOpen(!drawerOpen)} search={search} setSearch={setSearch} />
+            <Header me={me} onToggle={toggle} unread={unread} search={search} setSearch={setSearch} />
             <main className="content">{children}</main>
             <footer className="frame-foot">
               <span className="brand">NABEE HEX TEAM</span>
@@ -272,6 +282,8 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/queue" element={<QueuePage />} />
                 <Route path="/music" element={<MusicPage />} />
+                <Route path="/community" element={<CommunityPage />} />
+                <Route path="/servers" element={<ServersPage />} />
                 <Route path="/system" element={<SystemPage />} />
                 <Route
                   path="/embeds"
@@ -349,6 +361,16 @@ export default function App() {
                     </OwnerOnly>
                   }
                 />
+                <Route
+                  path="/database"
+                  element={
+                    <StaffOnly>
+                      <DatabasePage />
+                    </StaffOnly>
+                  }
+                />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/api-docs" element={<ApiDocsPage />} />
                 <Route path="/account" element={<ProfilePage />} />
                 <Route path="/developer" element={<DeveloperPage />} />
                 <Route path="/more" element={<Navigate to="/system" replace />} />

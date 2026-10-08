@@ -108,4 +108,5 @@ export interface DashboardData {
   activity: ActivityItem[];
   player: PlayerState | null;
   guilds: GuildInfo[];
+  unread: number;
 }

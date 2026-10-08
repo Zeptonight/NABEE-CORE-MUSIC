@@ -78,7 +78,7 @@ export function registerApiRoutes(app: FastifyInstance): void {
   app.get('/api/bootstrap', async () => ({
     version: appVersion(),
     github: { configured: githubConfigured(), ownerConfigured: ownerIdsConfigured(), baseUrlSet: Boolean(config.baseUrl) },
-    discord: { configured: botConfigured(), clientIdSet: Boolean(config.discordClientId) },
+    discord: { configured: botConfigured(), clientIdSet: Boolean(config.discordClientId), clientId: config.discordClientId || null },
     database: { configured: true },
     allowIframe: config.allowIframe,
   }));
@@ -112,6 +112,7 @@ export function registerApiRoutes(app: FastifyInstance): void {
       activity,
       player,
       guilds: listGuildSnapshot(),
+      unread: await recentActivityCount(30),
     };
   });
 
@@ -141,6 +142,7 @@ export function registerApiRoutes(app: FastifyInstance): void {
       database: await dbEngineVersion(db),
       uptime: fmtDuration(processUptimeSec() * 1000),
       version: appVersion(),
+      firstBootAt: await getSetting<number | null>('first_boot_at', null),
       configured: {
         bot: botConfigured(),
         github: githubConfigured(),
@@ -623,6 +625,28 @@ export function registerApiRoutes(app: FastifyInstance): void {
     await writeAudit({ userId: req.auth!.user.id, username: req.auth!.user.login, action: 'settings.update', detail: JSON.stringify({ ...b, presence: undefined }), ip: req.ip });
     return allSettings();
   });
+
+  app.get('/api/database', { preHandler: requireStaff }, async () => {
+    const db = await getDb();
+    const tables = ['users', 'sessions', 'credentials', 'audit_logs', 'activity_events', 'queue_tracks', 'settings', 'stats_daily', 'webhooks', 'embed_templates'];
+    const counts: { name: string; rows: number }[] = [];
+    for (const t of tables) {
+      const r = await db.get(`SELECT COUNT(*) AS n FROM ${t}`);
+      counts.push({ name: t, rows: Number(r?.n ?? 0) });
+    }
+    return {
+      engine: await dbEngineVersion(db),
+      dialect: db.dialect,
+      latencyMs: await measureDbLatency(db),
+      tables: counts,
+    };
+  });
+}
+
+async function recentActivityCount(minutes: number): Promise<number> {
+  const db = await getDb();
+  const r = await db.get('SELECT COUNT(*) AS n FROM activity_events WHERE created_at >= ?', [Date.now() - minutes * 60_000]);
+  return Number(r?.n ?? 0);
 }
 
 function listGuildSnapshot(): { id: string; name: string; iconUrl: string | null; memberCount: number; active: boolean }[] {

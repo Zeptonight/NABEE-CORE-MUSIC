@@ -121,8 +121,76 @@ export function EmbedsPage() {
   );
 }
 
-/* ---------------- ลิงก์ & เชื่อม ---------------- */
-export function LinksPage() {
+/* ---------------- คอมมูนิตี้ ---------------- */
+export function CommunityPage() {
+  const [guilds, setGuilds] = useState<{ id: string; name: string; iconUrl: string | null; memberCount: number; active: boolean }[] | null>(null);
+  const [activity, setActivity] = useState<{ id: string; type: string; title: string; detail: string | null; created_at: number }[] | null>(null);
+  const [online, setOnline] = useState<boolean | null>(null);
+  useEffect(() => {
+    api<{ configured: boolean; online: boolean; guilds: { id: string; name: string; iconUrl: string | null; memberCount: number; active: boolean }[] }>('/api/guilds')
+      .then((r) => {
+        setGuilds(r.guilds);
+        setOnline(r.online);
+      })
+      .catch(() => undefined);
+    api<typeof activity>('/api/activity?limit=12').then(setActivity).catch(() => undefined);
+  }, []);
+  return (
+    <>
+      <div className="page-title">
+        <Icon name="music" size={17} />
+        คอมมูนิตี้
+        <span className="sub">เซิร์ฟเวอร์และกิจกรรมจริงจากบอท</span>
+      </div>
+      <div className="page-body">
+        {!online && <div className="warnbox">บอทยังไม่ออนไลน์ (NOT CONFIGURED / OFFLINE) — ข้อมูลจะแสดงเมื่อบอทเชื่อมต่อ Discord สำเร็จ</div>}
+        <div className="grid g-plain" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', padding: 0 }}>
+          <Card title="เซิร์ฟเวอร์ในคอมมูนิตี้" icon="server">
+            {!guilds || guilds.length === 0 ? (
+              <Empty icon="server">NO DATA — ยังไม่มีเซิร์ฟเวอร์</Empty>
+            ) : (
+              <div className="alist">
+                {guilds.map((g) => (
+                  <div key={g.id} className="srow">
+                    <span className="savatar">{g.iconUrl ? <img src={g.iconUrl} alt="" width={32} height={32} referrerPolicy="no-referrer" /> : <Icon name="server" size={14} />}</span>
+                    <div className="sinfo">
+                      <div className="sname">{g.name}</div>
+                      <div className="smembers">{g.memberCount.toLocaleString('en-US')} members</div>
+                    </div>
+                    <span className={`tag ${g.active ? 'ok' : 'dim'}`}>{g.active ? 'ACTIVE' : 'IDLE'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+          <Card title="กิจกรรมคอมมูนิตี้" icon="activity">
+            {!activity || activity.length === 0 ? (
+              <Empty icon="activity">ยังไม่มีกิจกรรม</Empty>
+            ) : (
+              <div className="alist">
+                {activity.map((a) => (
+                  <div key={a.id} className="arow">
+                    <span className="aic">
+                      <Icon name="activity" size={13} />
+                    </span>
+                    <div className="atxt">
+                      <div className="atitle">{a.title}</div>
+                      {a.detail && <div className="adetail">{a.detail}</div>}
+                    </div>
+                    <span className="atime">{new Date(a.created_at).toLocaleString('th-TH')}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ---------------- เซิร์ฟเวอร์ ---------------- */
+export function ServersPage() {
   const [guilds, setGuilds] = useState<{ id: string; name: string; iconUrl: string | null; memberCount: number; active: boolean }[] | null>(null);
   const [online, setOnline] = useState<boolean | null>(null);
   useEffect(() => {
@@ -136,14 +204,12 @@ export function LinksPage() {
   return (
     <>
       <div className="page-title">
-        <Icon name="link" size={17} />
-        ลิงก์ &amp; เชื่อม
+        <Icon name="server" size={17} />
+        เซิร์ฟเวอร์
         <span className="sub">เซิร์ฟเวอร์ Discord ที่บอทเชื่อมต่ออยู่จริง</span>
       </div>
       <div className="page-body">
-        {!online && (
-          <div className="warnbox">บอทยังไม่ออนไลน์ (NOT CONFIGURED / OFFLINE) — รายการเซิร์ฟเวอร์จะแสดงเมื่อบอทเชื่อมต่อ Discord สำเร็จ</div>
-        )}
+        {!online && <div className="warnbox">บอทยังไม่ออนไลน์ (NOT CONFIGURED / OFFLINE) — รายการเซิร์ฟเวอร์จะแสดงเมื่อบอทเชื่อมต่อ Discord สำเร็จ</div>}
         <Card title="เซิร์ฟเวอร์ทั้งหมด" icon="server">
           {!guilds || guilds.length === 0 ? (
             <Empty icon="server">NO DATA — ยังไม่มีเซิร์ฟเวอร์</Empty>
@@ -163,6 +229,73 @@ export function LinksPage() {
               ))}
             </div>
           )}
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* ---------------- ลิงก์ & เชื่อม ---------------- */
+export function LinksPage() {
+  const [boot, setBoot] = useState<{ discord: { configured: boolean; clientId: string | null } } | null>(null);
+  useEffect(() => {
+    api<typeof boot>('/api/bootstrap').then(setBoot).catch(() => undefined);
+  }, []);
+  const clientId = boot?.discord?.clientId ?? null;
+  const invite = clientId
+    ? `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot+applications.commands&permissions=3165184`
+    : null;
+  return (
+    <>
+      <div className="page-title">
+        <Icon name="link" size={17} />
+        ลิงก์ &amp; เชื่อม
+        <span className="sub">ลิงก์เชื่อมต่อระบบจริงทั้งหมด</span>
+      </div>
+      <div className="page-body">
+        <Card title="เชิญบอทเข้าเซิร์ฟเวอร์" icon="link">
+          {invite ? (
+            <>
+              <div className="note" style={{ marginBottom: 9 }}>
+                ลิงก์เชิญสร้างจาก DISCORD_CLIENT_ID จริงของระบบ (scopes: bot + applications.commands)
+              </div>
+              <div className="toolbar">
+                <a className="btn primary" href={invite} target="_blank" rel="noreferrer">
+                  <Icon name="discord" size={14} /> เปิดหน้าเชิญบอท (Discord)
+                </a>
+                <button className="btn" onClick={() => navigator.clipboard?.writeText(invite)}>
+                  <Icon name="link" size={13} /> คัดลอกลิงก์
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="warnbox">
+              ยังไม่ได้ตั้งค่า DISCORD_CLIENT_ID — ตั้งค่าผ่าน environment หรือหน้า “API &amp; Credentials” แล้วรีสตาร์ทเพื่อสร้างลิงก์เชิญ
+            </div>
+          )}
+        </Card>
+        <Card title="ลิงก์ระบบ" icon="globe">
+          <a className="rrow" href="https://github.com/Zeptonight/NABEE-CORE-MUSIC" target="_blank" rel="noreferrer">
+            <span className="tile-ic sm">
+              <Icon name="github" size={12} />
+            </span>
+            <span className="rlabel">ซอร์สโค้ด — GitHub Repository</span>
+            <Icon name="external" size={13} className="chev" />
+          </a>
+          <a className="rrow" href="https://github.com/Zeptonight/NABEE-CORE-MUSIC/issues" target="_blank" rel="noreferrer">
+            <span className="tile-ic sm">
+              <Icon name="alert" size={12} />
+            </span>
+            <span className="rlabel">รายงานปัญหา — GitHub Issues</span>
+            <Icon name="external" size={13} className="chev" />
+          </a>
+          <a className="rrow" href="https://discord.com/developers/applications" target="_blank" rel="noreferrer">
+            <span className="tile-ic sm">
+              <Icon name="discord" size={12} />
+            </span>
+            <span className="rlabel">Discord Developer Portal</span>
+            <Icon name="external" size={13} className="chev" />
+          </a>
         </Card>
       </div>
     </>
